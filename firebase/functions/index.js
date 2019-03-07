@@ -44,11 +44,13 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
     // // uncomment `intentMap.set('your intent name here', yourFunctionHandler);`
     // // below to get this function to be run when a Dialogflow intent is matched
     function voting(agent) {
-        // agent.add(`Voting locally for ` + agent.parameters['Singer']);
 
-        console.log('Calling voting...');
+        let conv = agent.conv();
+
+        let endConversation = false;
         let responseText = '';
         let singer = agent.parameters['Singer'];
+
         if (singer !== '') {
             let artistName = singer.replace(' ', '').toLowerCase();
             let currentArtist = admin.database().ref().child('/artists/' + artistName);
@@ -65,25 +67,41 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
                     })
                 }
             });
+
             responseText = 'Thank you for voting!';
+
+
         } else {
-            //???
+
+            // Add new property voteFallback
+            if (conv.data.voteFallback === undefined) {
+                conv.data.voteFallback = 0;
+            }
+            conv.data.voteFallback++;
+
+            // End the conversation after 3 times
+            if (conv.data.voteFallback > 2) {
+                responseText = 'Thank you for voting. You have reached a maximum attempts of voting. Try again later.';
+                endConversation = true;
+            } else {
+                console.log('fulfillment text');
+                responseText = request.body.queryResult.fulfillmentText;
+
+            }
+
+            if (endConversation) {
+                conv.close(responseText); // To end conversation
+            } else {
+                conv.ask(responseText); // To continue conversation
+            }
+
+            agent.add(conv);
+
         }
 
         agent.add(responseText);
 
-        // agent.add(`This message is from Dialogflow's Cloud Functions for Firebase editor!`);
-        // agent.add(new Card({
-        //     title: `Title: this is a card title`,
-        //     imageUrl: 'https://developers.google.com/actions/images/badges/XPM_BADGING_GoogleAssistant_VER.png',
-        //     text: `This is the body text of a card.  You can even use line\n  breaks and emoji! 💁`,
-        //     buttonText: 'This is a button',
-        //     buttonUrl: 'https://assistant.google.com/'
-        //   })
-        // );
-        // agent.add(new Suggestion(`Quick Reply`));
-        // agent.add(new Suggestion(`Suggestion`));
-        // agent.setContext({ name: 'weather', lifespan: 2, parameters: { city: 'Rome' }});
+
     }
 
     // // Uncomment and edit to make your own Google Assistant intent handler
