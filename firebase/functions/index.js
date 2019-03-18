@@ -8,7 +8,7 @@ const functions = require('firebase-functions');
 const {WebhookClient} = require('dialogflow-fulfillment');
 // const {Card, Suggestion} = require('dialogflow-fulfillment');
 
-const { BasicCard, Button, Image} = require('actions-on-google');
+const {BasicCard, Button, Image} = require('actions-on-google');
 
 // Database
 var admin = require("firebase-admin");
@@ -64,7 +64,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
 
     function buildSingleMeetupResponse() {
         let responseToUser;
-        if ( conv.data.meetupData.length === 0 ) {
+        if (conv.data.meetupData.length === 0) {
             responseToUser = 'No meetups available at this time!';
             conv.ask(responseToUser);
         } else {
@@ -124,6 +124,8 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
             .then(function (data) {
                 let meetups = JSON.parse(data);
                 // Check the JSON has events array
+                // TODO: Fix on meetups
+                console.log(meetups);
                 if (meetups.hasOwnProperty('events')) {
                     saveData(meetups.events);
                 }
@@ -134,7 +136,7 @@ exports.dialogflowFirebaseFulfillment = functions.https.onRequest((request, resp
     }
 
     async function showMeetups(agent) {
-        if ( checkIfGoogle(agent) ) {
+        if (checkIfGoogle(agent)) {
             let response = await displayMeetup(); // let's display first meetup
             agent.add(response);
         }
